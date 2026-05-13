@@ -6,25 +6,35 @@
 
 namespace metshield {
 
+// Representing the physical states of Aerospace Titanium (Ti-6Al-4V)
+enum class PhaseID : uint8_t {
+    SOLID_ALPHA = 0,
+    SOLID_BETA  = 1,
+    LIQUID      = 2,
+    VAPOR       = 3
+};
+
+// Constant for liquids/gasses which have no crystal structure
+const uint32_t GRAIN_UNSTRUCTURED = 0;
+
 /**
  * @brief Represents the 3D domain of the microstructure using a flattened 1D array
  *        of bit-packed 64-bit integers to maximize CPU cache locality.
  */
- // voxel is a small cubic volume elemnt 
 class VoxelGrid {
 public:
     // Boilerplate: Constructor allocates the exact memory needed upfront
     VoxelGrid(size_t width, size_t height, size_t depth)
         : m_width(width), m_height(height), m_depth(depth) {
-        m_data.resize(width * height * depth, 0);
+        size_t total_voxels = width * height * depth;
+        m_data.resize(total_voxels, 0);
+        m_next_temp.resize(total_voxels, 0.0f); // Size the persistent double buffer!
     }
 
     // Boilerplate: 3D to 1D mapping. X changes fastest for cache locality.
     [[nodiscard]] inline size_t getIndex(size_t x, size_t y, size_t z) const {
         return x + (y * m_width) + (z * m_width * m_height);
     }
-
-
     
     // 1. Bitwise Getters
     [[nodiscard]] inline uint8_t getPhase(size_t x, size_t y, size_t z) const {
@@ -34,7 +44,7 @@ public:
 
     [[nodiscard]] inline uint32_t getGrain(size_t x, size_t y, size_t z) const {
         uint64_t voxel = m_data[getIndex(x, y, z)];
-        return static_cast<uint32_t>(voxel & 0xFFFFFF); // Grain is at bits 0-23, so no shift needed
+        return static_cast<uint32_t>(voxel & 0xFFFFFF); // Grain is at bits 0-23
     }
 
     [[nodiscard]] inline float getTemp(size_t x, size_t y, size_t z) const {
@@ -73,17 +83,23 @@ public:
         
         // Insert the new bits at the top
         voxel |= (static_cast<uint64_t>(tempBits) << 32);
-
     }
+
     void stepThermalFDM(float alpha, float dt);
+    int calculateGrainEnergy(size_t x, size_t y, size_t z, uint32_t target_grain);
+    void stepMetallurgy();
+    void initDefaultstate();
 
 private:
     size_t m_width;
     size_t m_height;
     size_t m_depth;
     
-    // The core memory architecture: a contiguous block of RAM
+    // The core memory architecture
     std::vector<uint64_t> m_data;
+    
+    // Persistent double buffer (Memory Optimization)
+    std::vector<float> m_next_temp;
 };
 
-}
+} // namespace metshield
