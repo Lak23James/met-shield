@@ -102,4 +102,4 @@ private:
     std::vector<float> m_next_temp;
 };
 
-} // namespace metshield
+}

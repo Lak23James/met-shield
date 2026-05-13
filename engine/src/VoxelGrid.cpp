@@ -74,9 +74,18 @@ void VoxelGrid::stepMetallurgy() {
         if (temp > 1250.0f && phase == static_cast<uint8_t>(PhaseID::SOLID_ALPHA)) {
             setPhase(c_x, c_y, c_z, static_cast<uint8_t>(PhaseID::SOLID_BETA));
         }         
-        else if (temp <= 1250.0f && phase == static_cast<uint8_t>(PhaseID::SOLID_BETA)) {
+        if (temp <= 1250.0f && phase == static_cast<uint8_t>(PhaseID::SOLID_BETA)) {
             setPhase(c_x, c_y, c_z, static_cast<uint8_t>(PhaseID::SOLID_ALPHA));
         }
+                // Ablation Physics
+        if (temp >= 1660.0f && phase != static_cast<uint8_t>(PhaseID::LIQUID)) {
+            setPhase(c_x, c_y, c_z, static_cast<uint8_t>(PhaseID::LIQUID));
+            setGrain(c_x, c_y, c_z, GRAIN_UNSTRUCTURED); // Liquid has no crystal!
+        }
+        if (temp >= 3287.0f && phase != static_cast<uint8_t>(PhaseID::VAPOR)) {
+            setPhase(c_x, c_y, c_z, static_cast<uint8_t>(PhaseID::VAPOR));
+        }
+
     }
 }
 void VoxelGrid::initDefaultstate() {
