@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
-import { tempToBlackbody } from "@/lib/thermalColors";
+import { tempToInferno } from "@/lib/thermalColors";
 
 interface HeatmapProps {
   temperatures: Float32Array;
@@ -131,7 +131,7 @@ export default function Heatmap2D({
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         const temp = getSliceTemp(col, row);
-        const { r, g, b } = tempToBlackbody(temp, 300, effMax);
+        const { r, g, b } = tempToInferno(temp, 300, effMax);
 
         const px = PADDING + col * cellW;
         // Flip Y so z=depth-1 (plasma face) is at the top
@@ -246,7 +246,7 @@ export default function Heatmap2D({
     for (let py = 0; py < barH; py++) {
       const t = 1 - py / barH; // top = hot, bottom = cold
       const temp = 300 + t * (effMax - 300);
-      const { r, g, b } = tempToBlackbody(temp, 300, effMax);
+      const { r, g, b } = tempToInferno(temp, 300, effMax);
       ctx.fillStyle = `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
       ctx.fillRect(barX, barTop + py, barW, 1);
     }
