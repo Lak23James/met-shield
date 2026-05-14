@@ -103,7 +103,7 @@ void VoxelGrid::initDefaultstate() {
     }
 }
 // function for heat transfer simulation
-void VoxelGrid::stepThermalFDM(float alpha, float dt) {
+void VoxelGrid::stepThermalFDM(float alpha, float dt, float currentHeatFlux) {
    
     
     std::fill(m_next_temp.begin(), m_next_temp.end(), 0.0f);
@@ -145,7 +145,7 @@ void VoxelGrid::stepThermalFDM(float alpha, float dt) {
 
     // --- BOUNDARY CONDITION 2: NEUMANN (TOP FACE: z = m_depth - 1) ---
     // Plasma heat flux entering the outer skin of the shield.
-    float plasma_flux = 500.0f; 
+    float plasma_flux = currentHeatFlux; 
     size_t top_z = m_depth - 1;
     for (size_t y = 0; y < m_height; ++y) {
         for (size_t x = 0; x < m_width; ++x) {
@@ -167,3 +167,25 @@ void VoxelGrid::stepThermalFDM(float alpha, float dt) {
 }
 
 } 
+
+// PHASE 4: WEBASSEMBLY (EMSCRIPTEN) BINDINGS
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten/bind.h>
+
+using namespace emscripten;
+
+EMSCRIPTEN_BINDINGS(metshield_module) {
+    class_<metshield::VoxelGrid>("VoxelGrid")
+        .constructor<size_t, size_t, size_t>()
+        .function("getPhase", &metshield::VoxelGrid::getPhase)
+        .function("getGrain", &metshield::VoxelGrid::getGrain)
+        .function("getTemp", &metshield::VoxelGrid::getTemp)
+        .function("setPhase", &metshield::VoxelGrid::setPhase)
+        .function("setGrain", &metshield::VoxelGrid::setGrain)
+        .function("setTemp", &metshield::VoxelGrid::setTemp)
+        .function("stepThermalFDM", &metshield::VoxelGrid::stepThermalFDM)
+        .function("stepMetallurgy", &metshield::VoxelGrid::stepMetallurgy)
+        .function("initDefaultstate", &metshield::VoxelGrid::initDefaultstate);
+}
+#endif

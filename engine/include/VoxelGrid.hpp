@@ -85,7 +85,7 @@ public:
         voxel |= (static_cast<uint64_t>(tempBits) << 32);
     }
 
-    void stepThermalFDM(float alpha, float dt);
+    void stepThermalFDM(float alpha, float dt, float currentHeatFlux = 500.0f);
     int calculateGrainEnergy(size_t x, size_t y, size_t z, uint32_t target_grain);
     void stepMetallurgy();
     void initDefaultstate();
